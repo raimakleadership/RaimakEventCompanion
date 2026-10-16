@@ -1,0 +1,1192 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
+    />
+    <title>Next-Day Event Recap</title>
+
+    <!-- Flatpickr for Date Selection -->
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css"
+    />
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+
+    <style>
+      :root {
+        --primary: #d52b1e;
+        --primary-dark: #b32419;
+        --text: #111111;
+        --border: #dddddd;
+        --bg: #ffffff;
+        --subtle: #f8f8f8;
+        --success: #137333;
+      }
+
+      body {
+        font-family: "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        background-color: var(--subtle);
+        color: var(--text);
+        margin: 0;
+        padding: 25px 15px;
+        display: flex;
+        justify-content: center;
+        min-height: 100vh;
+        box-sizing: border-box;
+      }
+
+      .form-wrapper {
+        background: var(--bg);
+        width: 100%;
+        max-width: 800px;
+        padding: 35px 40px;
+        border-radius: 16px;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.08);
+      }
+
+      .top-bar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-bottom: 12px;
+      }
+
+      .badge {
+        display: inline-block;
+        background: var(--primary);
+        color: #fff;
+        padding: 6px 14px;
+        border-radius: 20px;
+        font-size: 0.85rem;
+        font-weight: 700;
+        letter-spacing: 0.5px;
+      }
+
+      .autosave-group {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+
+      .save-status {
+        font-size: 0.85rem;
+        color: var(--success);
+        font-weight: 600;
+      }
+
+      .reset-btn {
+        background: transparent;
+        border: 1px solid #ccc;
+        color: #555;
+        padding: 5px 10px;
+        border-radius: 6px;
+        font-size: 0.8rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s;
+      }
+
+      .reset-btn:hover {
+        border-color: var(--primary);
+        color: var(--primary);
+      }
+
+      .header {
+        text-align: center;
+        margin-bottom: 25px;
+        padding-bottom: 20px;
+        border-bottom: 2px solid var(--border);
+      }
+
+      .header h1 {
+        margin: 5px 0 8px 0;
+        font-size: 2rem;
+        font-weight: 700;
+      }
+
+      .header p {
+        margin: 0;
+        color: #666;
+        font-size: 1rem;
+      }
+
+      /* Navigation Tabs for Free Switching */
+      .step-tabs {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 8px;
+        margin-bottom: 28px;
+      }
+
+      .tab-btn {
+        padding: 12px 8px;
+        background: var(--subtle);
+        border: 2px solid var(--border);
+        border-radius: 10px;
+        font-size: 0.9rem;
+        font-weight: 700;
+        color: #555;
+        cursor: pointer;
+        text-align: center;
+        transition: all 0.2s;
+        user-select: none;
+      }
+
+      .tab-btn.active {
+        background: rgba(213, 43, 30, 0.08);
+        border-color: var(--primary);
+        color: var(--primary);
+      }
+
+      .step {
+        display: none;
+        opacity: 0;
+        transition: opacity 0.25s ease-in-out;
+      }
+
+      .step.active {
+        display: block;
+        opacity: 1;
+      }
+
+      .section-title {
+        font-size: 1.25rem;
+        font-weight: 700;
+        color: var(--primary);
+        margin: 0 0 16px 0;
+        padding-bottom: 8px;
+        border-bottom: 1px solid var(--border);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+
+      .section-subtitle {
+        font-size: 0.85rem;
+        color: #666;
+        font-weight: 500;
+      }
+
+      .grid-2 {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 16px;
+      }
+
+      @media (max-width: 640px) {
+        .grid-2 {
+          grid-template-columns: 1fr;
+        }
+        .step-tabs {
+          grid-template-columns: repeat(2, 1fr);
+        }
+        .form-wrapper {
+          padding: 25px 18px;
+        }
+      }
+
+      .form-group {
+        margin-bottom: 18px;
+      }
+
+      label {
+        display: block;
+        font-weight: 600;
+        margin-bottom: 8px;
+        font-size: 0.95rem;
+        color: #222;
+      }
+
+      input[type="text"],
+      select,
+      textarea {
+        width: 100%;
+        padding: 14px;
+        border: 2px solid var(--border);
+        border-radius: 10px;
+        font-size: 1rem;
+        font-family: inherit;
+        box-sizing: border-box;
+        background-color: var(--bg);
+        transition: border-color 0.2s;
+      }
+
+      textarea {
+        min-height: 95px;
+        resize: vertical;
+      }
+
+      input:focus,
+      select:focus,
+      textarea:focus {
+        outline: none;
+        border-color: var(--text);
+      }
+
+      /* LIVE TALLY COUNTER CARDS */
+      .tally-card {
+        background: var(--subtle);
+        border: 2px solid var(--border);
+        border-radius: 12px;
+        padding: 14px 16px;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        transition:
+          border-color 0.2s,
+          transform 0.1s;
+      }
+
+      .tally-card.highlight {
+        border-color: var(--primary);
+        background: rgba(213, 43, 30, 0.03);
+      }
+
+      .tally-card label {
+        margin-bottom: 10px;
+        font-size: 0.95rem;
+        color: #111;
+      }
+
+      .tally-controls {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .tally-btn {
+        width: 54px;
+        height: 50px;
+        border-radius: 10px;
+        border: none;
+        font-size: 1.6rem;
+        font-weight: 700;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        user-select: none;
+        touch-action: manipulation; /* Prevents double-tap zoom on tablets/phones */
+        transition:
+          transform 0.08s ease,
+          background-color 0.15s;
+      }
+
+      .tally-btn:active {
+        transform: scale(0.92);
+      }
+
+      .tally-btn.minus {
+        background-color: #e4e4e4;
+        color: #222;
+      }
+
+      .tally-btn.minus:hover {
+        background-color: #d4d4d4;
+      }
+
+      .tally-btn.plus {
+        background-color: var(--primary);
+        color: #ffffff;
+      }
+
+      .tally-btn.plus:hover {
+        background-color: var(--primary-dark);
+      }
+
+      .tally-input {
+        flex: 1;
+        height: 50px;
+        text-align: center;
+        font-size: 1.5rem;
+        font-weight: 800;
+        border: 2px solid var(--border);
+        border-radius: 10px;
+        background: #fff;
+        color: var(--text);
+        width: 100%;
+        box-sizing: border-box;
+        -moz-appearance: textfield;
+      }
+
+      .tally-input::-webkit-outer-spin-button,
+      .tally-input::-webkit-inner-spin-button {
+        -webkit-appearance: none;
+        margin: 0;
+      }
+
+      .file-box {
+        border: 2px dashed var(--border);
+        padding: 20px;
+        border-radius: 10px;
+        text-align: center;
+        background: var(--subtle);
+      }
+
+      .btn-row {
+        display: flex;
+        gap: 15px;
+        margin-top: 25px;
+      }
+
+      .btn {
+        flex: 1;
+        padding: 18px;
+        background-color: var(--text);
+        color: white;
+        border: none;
+        border-radius: 10px;
+        font-size: 1.15rem;
+        font-weight: bold;
+        cursor: pointer;
+        transition: background 0.2s;
+      }
+
+      .btn:hover {
+        background-color: #333;
+      }
+
+      .btn-outline {
+        background-color: transparent;
+        color: var(--text);
+        border: 2px solid var(--border);
+      }
+
+      .btn-outline:hover {
+        background-color: var(--subtle);
+      }
+
+      .btn-submit {
+        background-color: var(--primary);
+      }
+
+      .btn-submit:hover {
+        background-color: var(--primary-dark);
+      }
+
+      #loader {
+        display: none;
+        text-align: center;
+        padding: 40px 20px;
+      }
+
+      .hidden {
+        display: none !important;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="form-wrapper">
+      <div class="top-bar">
+        <span id="regionBadge" class="badge">REGION: SELECT BELOW</span>
+        <div class="autosave-group">
+          <span id="saveIndicator" class="save-status"
+            >💾 Progress Auto-Saved</span
+          >
+          <button type="button" class="reset-btn" onclick="resetEventData()">
+            Reset Board
+          </button>
+        </div>
+      </div>
+
+      <div class="header">
+        <h1 id="appTitle">MDU Live Tally & Event Recap</h1>
+        <p>
+          Tap + to track live event activity; complete written recap after event
+        </p>
+      </div>
+
+      <!-- Free Navigation Tabs -->
+      <div class="step-tabs">
+        <button type="button" class="tab-btn active" onclick="goToStep(1)">
+          1. Live Tallies
+        </button>
+        <button type="button" class="tab-btn" onclick="goToStep(2)">
+          2. Pipeline Notes
+        </button>
+        <button type="button" class="tab-btn" onclick="goToStep(3)">
+          3. Assessment
+        </button>
+        <button type="button" class="tab-btn" onclick="goToStep(4)">
+          4. Action Plan
+        </button>
+      </div>
+
+      <form id="recapForm">
+        <!-- STEP 1: EVENT INFO & ALL LIVE TALLY COUNTERS -->
+        <div id="step1" class="step active">
+          <div class="section-title">
+            <span>Event Information</span>
+            <span class="section-subtitle">Setup Details</span>
+          </div>
+
+          <!-- Shown only if URL doesn't have ?state= -->
+          <div id="manualRegionGroup" class="form-group hidden">
+            <label for="manualRegion">Select Region / Market *</label>
+            <select id="manualRegion" onchange="saveProgress()">
+              <option value="">-- Choose Market --</option>
+              <option value="HOUSTON">Houston</option>
+              <option value="STLOUIS">St. Louis (STL)</option>
+              <option value="SPRINGFIELD">Springfield (IL)</option>
+            </select>
+          </div>
+
+          <div class="grid-2">
+            <div class="form-group">
+              <label for="mduName">Event Name / MDU Property *</label>
+              <input
+                type="text"
+                id="mduName"
+                required
+                placeholder="Match exact MDU name..."
+                oninput="saveProgress()"
+              />
+            </div>
+
+            <div class="form-group">
+              <label for="eventDate">Event Date *</label>
+              <input
+                type="text"
+                id="eventDate"
+                required
+                placeholder="Select date..."
+                onchange="saveProgress()"
+              />
+            </div>
+          </div>
+
+          <div class="grid-2">
+            <div class="form-group">
+              <label for="eventHours">Event Hours *</label>
+              <input
+                type="text"
+                id="eventHours"
+                required
+                placeholder="e.g., 1:00 PM - 6:00 PM"
+                oninput="saveProgress()"
+              />
+            </div>
+
+            <div class="form-group">
+              <label for="teamMembers">Raimak Team Members Present *</label>
+              <input
+                type="text"
+                id="teamMembers"
+                required
+                placeholder="e.g., John D., Sarah M."
+                oninput="saveProgress()"
+              />
+            </div>
+          </div>
+
+          <!-- LIVE TALLY SECTION: TRAFFIC & ENGAGEMENT -->
+          <div class="section-title" style="margin-top: 10px">
+            <span>Live Tally: Traffic & Engagement</span>
+            <span class="section-subtitle">Tap as customers walk up</span>
+          </div>
+
+          <div class="grid-2" style="margin-bottom: 22px">
+            <div class="tally-card" id="card-estTraffic">
+              <label for="estTraffic">🚶 Estimated Foot Traffic</label>
+              <div class="tally-controls">
+                <button
+                  type="button"
+                  class="tally-btn minus"
+                  onclick="adjustTally('estTraffic', -1)"
+                >
+                  &minus;
+                </button>
+                <input
+                  type="number"
+                  id="estTraffic"
+                  class="tally-input"
+                  min="0"
+                  value="0"
+                  required
+                  oninput="saveProgress()"
+                />
+                <button
+                  type="button"
+                  class="tally-btn plus"
+                  onclick="adjustTally('estTraffic', 1)"
+                >
+                  +
+                </button>
+              </div>
+            </div>
+
+            <div class="tally-card" id="card-custConvos">
+              <label for="custConvos">💬 Customer Conversations</label>
+              <div class="tally-controls">
+                <button
+                  type="button"
+                  class="tally-btn minus"
+                  onclick="adjustTally('custConvos', -1)"
+                >
+                  &minus;
+                </button>
+                <input
+                  type="number"
+                  id="custConvos"
+                  class="tally-input"
+                  min="0"
+                  value="0"
+                  required
+                  oninput="saveProgress()"
+                />
+                <button
+                  type="button"
+                  class="tally-btn plus"
+                  onclick="adjustTally('custConvos', 1)"
+                >
+                  +
+                </button>
+              </div>
+            </div>
+
+            <div class="tally-card" id="card-qualOpps">
+              <label for="qualOpps">⭐ Qualified Opportunities</label>
+              <div class="tally-controls">
+                <button
+                  type="button"
+                  class="tally-btn minus"
+                  onclick="adjustTally('qualOpps', -1)"
+                >
+                  &minus;
+                </button>
+                <input
+                  type="number"
+                  id="qualOpps"
+                  class="tally-input"
+                  min="0"
+                  value="0"
+                  required
+                  oninput="saveProgress()"
+                />
+                <button
+                  type="button"
+                  class="tally-btn plus"
+                  onclick="adjustTally('qualOpps', 1)"
+                >
+                  +
+                </button>
+              </div>
+            </div>
+
+            <div class="tally-card" id="card-leadsCaptured">
+              <label for="leadsCaptured">📋 Total Leads Captured</label>
+              <div class="tally-controls">
+                <button
+                  type="button"
+                  class="tally-btn minus"
+                  onclick="adjustTally('leadsCaptured', -1)"
+                >
+                  &minus;
+                </button>
+                <input
+                  type="number"
+                  id="leadsCaptured"
+                  class="tally-input"
+                  min="0"
+                  value="0"
+                  required
+                  oninput="saveProgress()"
+                />
+                <button
+                  type="button"
+                  class="tally-btn plus"
+                  onclick="adjustTally('leadsCaptured', 1)"
+                >
+                  +
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- LIVE TALLY SECTION: SALES & PIPELINE -->
+          <div class="section-title">
+            <span>Live Tally: Sales & Follow-Up Pipeline</span>
+            <span class="section-subtitle">Tap as deals close or book</span>
+          </div>
+
+          <div class="grid-2">
+            <div class="tally-card" id="card-linesSold">
+              <label for="linesSold">📱 Verizon Mobile Lines Sold</label>
+              <div class="tally-controls">
+                <button
+                  type="button"
+                  class="tally-btn minus"
+                  onclick="adjustTally('linesSold', -1)"
+                >
+                  &minus;
+                </button>
+                <input
+                  type="number"
+                  id="linesSold"
+                  class="tally-input"
+                  min="0"
+                  value="0"
+                  required
+                  oninput="saveProgress()"
+                />
+                <button
+                  type="button"
+                  class="tally-btn plus"
+                  onclick="adjustTally('linesSold', 1)"
+                >
+                  +
+                </button>
+              </div>
+            </div>
+
+            <div class="tally-card" id="card-home5GSales">
+              <label for="home5GSales">🏠 5G Home Sales / Opps</label>
+              <div class="tally-controls">
+                <button
+                  type="button"
+                  class="tally-btn minus"
+                  onclick="adjustTally('home5GSales', -1)"
+                >
+                  &minus;
+                </button>
+                <input
+                  type="number"
+                  id="home5GSales"
+                  class="tally-input"
+                  min="0"
+                  value="0"
+                  required
+                  oninput="saveProgress()"
+                />
+                <button
+                  type="button"
+                  class="tally-btn plus"
+                  onclick="adjustTally('home5GSales', 1)"
+                >
+                  +
+                </button>
+              </div>
+            </div>
+
+            <div class="tally-card" id="card-followUpCount">
+              <label for="followUpCount">🔄 Customers Needing Follow-Up</label>
+              <div class="tally-controls">
+                <button
+                  type="button"
+                  class="tally-btn minus"
+                  onclick="adjustTally('followUpCount', -1)"
+                >
+                  &minus;
+                </button>
+                <input
+                  type="number"
+                  id="followUpCount"
+                  class="tally-input"
+                  min="0"
+                  value="0"
+                  required
+                  oninput="saveProgress()"
+                />
+                <button
+                  type="button"
+                  class="tally-btn plus"
+                  onclick="adjustTally('followUpCount', 1)"
+                >
+                  +
+                </button>
+              </div>
+            </div>
+
+            <div class="tally-card" id="card-apptCount">
+              <label for="apptCount">📅 Appointments / Callbacks Set</label>
+              <div class="tally-controls">
+                <button
+                  type="button"
+                  class="tally-btn minus"
+                  onclick="adjustTally('apptCount', -1)"
+                >
+                  &minus;
+                </button>
+                <input
+                  type="number"
+                  id="apptCount"
+                  class="tally-input"
+                  min="0"
+                  value="0"
+                  required
+                  oninput="saveProgress()"
+                />
+                <button
+                  type="button"
+                  class="tally-btn plus"
+                  onclick="adjustTally('apptCount', 1)"
+                >
+                  +
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div class="btn-row">
+            <button type="button" class="btn" onclick="goToStep(2)">
+              Next: Sales & Pipeline Notes &rarr;
+            </button>
+          </div>
+        </div>
+
+        <!-- STEP 2: SALES OUTCOMES & PIPELINE DETAILS -->
+        <div id="step2" class="step">
+          <div class="section-title">
+            <span>Sales Outcomes & Pipeline Details</span>
+            <span class="section-subtitle">Step 2 of 4</span>
+          </div>
+
+          <div class="form-group">
+            <label for="otherSales">Other Relevant Sales Outcomes</label>
+            <input
+              type="text"
+              id="otherSales"
+              placeholder="Upgrades, quotes, business leads, etc. (or N/A)"
+              oninput="saveProgress()"
+            />
+          </div>
+
+          <div class="form-group">
+            <label for="pipelineDetails"
+              >Follow-Up Owners & Expected Next Actions *</label
+            >
+            <textarea
+              id="pipelineDetails"
+              required
+              placeholder="List who owns the follow-ups and what the expected next actions are..."
+              oninput="saveProgress()"
+            ></textarea>
+          </div>
+
+          <div class="btn-row">
+            <button type="button" class="btn btn-outline" onclick="goToStep(1)">
+              &larr; Back to Live Tallies
+            </button>
+            <button type="button" class="btn" onclick="goToStep(3)">
+              Next: Event Assessment &rarr;
+            </button>
+          </div>
+        </div>
+
+        <!-- STEP 3: EVENT ASSESSMENT -->
+        <div id="step3" class="step">
+          <div class="section-title">
+            <span>Event Assessment</span>
+            <span class="section-subtitle">Step 3 of 4</span>
+          </div>
+
+          <div class="form-group">
+            <label for="workedWell">What Worked Well? *</label>
+            <textarea
+              id="workedWell"
+              required
+              placeholder="Setup location, property management support, promos, time of day..."
+              oninput="saveProgress()"
+            ></textarea>
+          </div>
+
+          <div class="form-group">
+            <label for="didNotWork">What Did Not Work? *</label>
+            <textarea
+              id="didNotWork"
+              required
+              placeholder="Bottlenecks, low foot traffic hours, signage issues..."
+              oninput="saveProgress()"
+            ></textarea>
+          </div>
+
+          <div class="form-group">
+            <label for="feedbackIssues"
+              >Customer Feedback & Operational Issues *</label
+            >
+            <textarea
+              id="feedbackIssues"
+              required
+              placeholder="Coverage questions, pricing feedback, portal/system issues..."
+              oninput="saveProgress()"
+            ></textarea>
+          </div>
+
+          <div class="btn-row">
+            <button type="button" class="btn btn-outline" onclick="goToStep(2)">
+              &larr; Back
+            </button>
+            <button type="button" class="btn" onclick="goToStep(4)">
+              Next: Action Plan &rarr;
+            </button>
+          </div>
+        </div>
+
+        <!-- STEP 4: NEXT ACTION PLAN & EVIDENCE -->
+        <div id="step4" class="step">
+          <div class="section-title">
+            <span>Next Action Plan & Supporting Material</span>
+            <span class="section-subtitle">Step 4 of 4</span>
+          </div>
+
+          <div class="form-group">
+            <label for="repeatChange"
+              >What Should Be Repeated, Changed, or Eliminated? *</label
+            >
+            <textarea
+              id="repeatChange"
+              required
+              placeholder="Specific adjustments for next time..."
+              oninput="saveProgress()"
+            ></textarea>
+          </div>
+
+          <div class="form-group">
+            <label for="followUpPlan">Follow-Up Execution Plan *</label>
+            <textarea
+              id="followUpPlan"
+              required
+              placeholder="How and when will open opportunities from this event be worked?"
+              oninput="saveProgress()"
+            ></textarea>
+          </div>
+
+          <div class="form-group">
+            <label for="futureRec"
+              >Recommendation for Future Events at This Property *</label
+            >
+            <textarea
+              id="futureRec"
+              required
+              placeholder="Should we return? Best day/time to book next event?"
+              oninput="saveProgress()"
+            ></textarea>
+          </div>
+
+          <div class="form-group">
+            <label for="evidenceFiles"
+              >Supporting Material (Photos / Event Evidence - Optional)</label
+            >
+            <div class="file-box">
+              <input
+                type="file"
+                id="evidenceFiles"
+                multiple
+                accept="image/*,.pdf,.doc,.docx"
+              />
+              <p style="margin: 8px 0 0 0; font-size: 0.85rem; color: #666">
+                Upload event table photos or documentation (Max 3 files)
+              </p>
+            </div>
+          </div>
+
+          <div class="btn-row">
+            <button type="button" class="btn btn-outline" onclick="goToStep(3)">
+              &larr; Back
+            </button>
+            <button
+              type="button"
+              class="btn btn-submit"
+              onclick="submitRecap()"
+            >
+              Submit Event Recap
+            </button>
+          </div>
+        </div>
+      </form>
+
+      <div id="loader">
+        <h2>⏳ Submitting Event Recap...</h2>
+        <p style="font-size: 1.1rem; color: #666">
+          Syncing report and attachments with SharePoint.
+        </p>
+      </div>
+    </div>
+
+    <script>
+      // PASTE YOUR NEW POWER AUTOMATE RECAP WEBHOOK URL HERE
+      const RECAP_WEBHOOK_URL =
+        "https://default39e141900b234ecd99f9606ad12158.81.environment.api.powerplatform.com:443/powerautomate/automations/direct/cu/31/workflows/26b8ae10e66e4e659f99045e7a12a284/triggers/manual/paths/invoke?api-version=1";
+
+      const STORAGE_KEY = "raimak_vz_event_recap_draft";
+      let regionalState = "";
+      let datePickerInstance = null;
+
+      // All field IDs persisted in localStorage
+      const PERSISTED_FIELDS = [
+        "manualRegion",
+        "mduName",
+        "eventDate",
+        "eventHours",
+        "teamMembers",
+        "estTraffic",
+        "custConvos",
+        "qualOpps",
+        "leadsCaptured",
+        "linesSold",
+        "home5GSales",
+        "followUpCount",
+        "apptCount",
+        "otherSales",
+        "pipelineDetails",
+        "workedWell",
+        "didNotWork",
+        "feedbackIssues",
+        "repeatChange",
+        "followUpPlan",
+        "futureRec",
+      ];
+
+      document.addEventListener("DOMContentLoaded", function () {
+        // 1. Initialize Flatpickr for Event Date
+        datePickerInstance = flatpickr("#eventDate", {
+          dateFormat: "Y-m-d",
+          altInput: true,
+          altFormat: "F j, Y",
+          defaultDate: "today",
+          disableMobile: "true",
+        });
+
+        // 2. Restore any saved live tallies/notes before checking URL
+        loadProgress();
+
+        // 3. Read ?state= parameter from URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const stateParam = urlParams.get("state");
+        const badgeEl = document.getElementById("regionBadge");
+        const manualGroup = document.getElementById("manualRegionGroup");
+        const manualSelect = document.getElementById("manualRegion");
+
+        if (stateParam) {
+          const raw = stateParam.toUpperCase();
+          if (raw === "STL" || raw === "STLOUIS") regionalState = "STLOUIS";
+          else if (raw === "IL" || raw === "SPRINGFIELD")
+            regionalState = "SPRINGFIELD";
+          else regionalState = raw;
+
+          document.title = `${regionalState} - Live Event Recap`;
+          badgeEl.innerText = `REGION: ${regionalState}`;
+        } else {
+          manualGroup.classList.remove("hidden");
+          manualSelect.required = true;
+          if (manualSelect.value) {
+            regionalState = manualSelect.value;
+            badgeEl.innerText = `REGION: ${regionalState}`;
+          }
+          manualSelect.addEventListener("change", (e) => {
+            regionalState = e.target.value;
+            badgeEl.innerText = regionalState
+              ? `REGION: ${regionalState}`
+              : "REGION: SELECT BELOW";
+            saveProgress();
+          });
+        }
+      });
+
+      // Increment / Decrement Tally Logic
+      function adjustTally(fieldId, delta) {
+        const input = document.getElementById(fieldId);
+        const card = document.getElementById(`card-${fieldId}`);
+        let currentVal = parseInt(input.value, 10);
+        if (isNaN(currentVal)) currentVal = 0;
+
+        const newVal = Math.max(0, currentVal + delta);
+        input.value = newVal;
+
+        // Brief visual pulse on the card when incremented
+        if (card) {
+          card.classList.add("highlight");
+          setTimeout(() => card.classList.remove("highlight"), 250);
+        }
+
+        saveProgress();
+      }
+
+      // Save all tallies and text inputs to localStorage
+      function saveProgress() {
+        const data = {};
+        PERSISTED_FIELDS.forEach((id) => {
+          const el = document.getElementById(id);
+          if (el) data[id] = el.value;
+        });
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+
+        const indicator = document.getElementById("saveIndicator");
+        if (indicator) {
+          indicator.innerText = "💾 Saved just now";
+        }
+      }
+
+      // Restore tallies and text inputs on load
+      function loadProgress() {
+        const savedRaw = localStorage.getItem(STORAGE_KEY);
+        if (!savedRaw) return;
+
+        try {
+          const data = JSON.parse(savedRaw);
+          PERSISTED_FIELDS.forEach((id) => {
+            const el = document.getElementById(id);
+            if (el && data[id] !== undefined && data[id] !== "") {
+              el.value = data[id];
+              if (id === "eventDate" && datePickerInstance) {
+                datePickerInstance.setDate(data[id], false);
+              }
+            }
+          });
+        } catch (err) {
+          console.error("Could not load saved draft:", err);
+        }
+      }
+
+      // Manual Reset Button
+      function resetEventData() {
+        if (
+          !confirm("Reset all live tallies and notes to zero for a new event?")
+        ) {
+          return;
+        }
+        localStorage.removeItem(STORAGE_KEY);
+        location.reload();
+      }
+
+      // Free Navigation Between Steps
+      function goToStep(targetStep) {
+        document.querySelectorAll(".step").forEach((el, idx) => {
+          if (idx + 1 === targetStep) {
+            el.classList.add("active");
+            el.style.opacity = 1;
+          } else {
+            el.classList.remove("active");
+            el.style.opacity = 0;
+          }
+        });
+
+        document.querySelectorAll(".tab-btn").forEach((btn, idx) => {
+          btn.classList.toggle("active", idx + 1 === targetStep);
+        });
+
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      }
+
+      // Validate across all steps when submitting
+      function validateAllSteps() {
+        for (let stepNum = 1; stepNum <= 4; stepNum++) {
+          const stepEl = document.getElementById(`step${stepNum}`);
+          const inputs = Array.from(
+            stepEl.querySelectorAll("input, textarea, select"),
+          );
+          for (let input of inputs) {
+            if (!input.checkValidity()) {
+              goToStep(stepNum);
+              setTimeout(() => input.reportValidity(), 150);
+              return false;
+            }
+          }
+        }
+        return true;
+      }
+
+      // Convert uploaded photos into Base64 for SharePoint Attachments
+      function fileToBase64(file) {
+        return new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.readAsDataURL(file);
+          reader.onload = () => {
+            const base64String = reader.result.split(",")[1];
+            resolve({
+              FileName: file.name,
+              Base64Content: base64String,
+            });
+          };
+          reader.onerror = (error) => reject(error);
+        });
+      }
+
+      async function submitRecap() {
+        if (!validateAllSteps()) return;
+
+        document.getElementById("recapForm").style.display = "none";
+        document.getElementById("loader").style.display = "block";
+
+        const fileInput = document.getElementById("evidenceFiles");
+        const attachmentsArray = [];
+        const files = Array.from(fileInput.files).slice(0, 3);
+        for (let file of files) {
+          const encoded = await fileToBase64(file);
+          attachmentsArray.push(encoded);
+        }
+
+        const pipelineSummary =
+          `[FOLLOW-UPS NEEDED]: ${document.getElementById("followUpCount").value}\n` +
+          `[APPOINTMENTS / CALLBACKS]: ${document.getElementById("apptCount").value}\n` +
+          `[OWNERS & NEXT ACTIONS]:\n${document.getElementById("pipelineDetails").value.trim()}`;
+
+        const eventAssessment =
+          `[WHAT WORKED WELL]:\n${document.getElementById("workedWell").value.trim()}\n\n` +
+          `[WHAT DID NOT WORK]:\n${document.getElementById("didNotWork").value.trim()}\n\n` +
+          `[FEEDBACK & OPERATIONAL ISSUES]:\n${document.getElementById("feedbackIssues").value.trim()}`;
+
+        const nextActionPlan =
+          `[REPEAT / CHANGE / ELIMINATE]:\n${document.getElementById("repeatChange").value.trim()}\n\n` +
+          `[FOLLOW-UP PLAN]:\n${document.getElementById("followUpPlan").value.trim()}\n\n` +
+          `[FUTURE EVENT RECOMMENDATION]:\n${document.getElementById("futureRec").value.trim()}`;
+
+        const payload = {
+          Title: document.getElementById("mduName").value.trim(),
+          LocationName: regionalState || "UNKNOWN",
+          EventDate: document.getElementById("eventDate").value,
+          EventHours: document.getElementById("eventHours").value.trim(),
+          TeamMembers: document.getElementById("teamMembers").value.trim(),
+          EstimatedTraffic: Number(document.getElementById("estTraffic").value),
+          CustomerConversations: Number(
+            document.getElementById("custConvos").value,
+          ),
+          QualifiedOpportunities: Number(
+            document.getElementById("qualOpps").value,
+          ),
+          LeadsCaptured: Number(document.getElementById("leadsCaptured").value),
+          LinesSold: Number(document.getElementById("linesSold").value),
+          Home5GSales: Number(document.getElementById("home5GSales").value),
+          OtherSalesOutcomes:
+            document.getElementById("otherSales").value.trim() || "N/A",
+          PipelineSummary: pipelineSummary,
+          EventAssessment: eventAssessment,
+          NextActionPlan: nextActionPlan,
+          SubmissionDate: new Date().toISOString(),
+          Attachments: attachmentsArray,
+        };
+
+        try {
+          const response = await fetch(RECAP_WEBHOOK_URL, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload),
+          });
+
+          if (response.ok) {
+            // Clear saved draft after successful SharePoint sync
+            localStorage.removeItem(STORAGE_KEY);
+            document.getElementById("loader").innerHTML =
+              "<h2 style='color:#137333;'>✅ Event Recap Submitted!</h2><p style='font-size:1.2rem'>Tallies cleared. Reloading form...</p>";
+            setTimeout(() => location.reload(), 2500);
+          } else {
+            throw new Error("Webhook returned an error");
+          }
+        } catch (error) {
+          console.error("Submission error:", error);
+          document.getElementById("loader").innerHTML =
+            "<h2 style='color:var(--primary);'>❌ Submission Failed</h2><p style='font-size:1.1rem'>Your tallies are still saved. Please check your connection and try again.</p>";
+          setTimeout(() => {
+            document.getElementById("loader").style.display = "none";
+            document.getElementById("recapForm").style.display = "block";
+          }, 3000);
+        }
+      }
+    </script>
+  </body>
+</html>
